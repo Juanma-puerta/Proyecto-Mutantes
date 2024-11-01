@@ -1,15 +1,16 @@
-# Usa una imagen de OpenJDK como base
-FROM openjdk:17-jdk-slim
 
-# Establece el directorio de trabajo en el contenedor
+FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copia el archivo JAR de la aplicación al contenedor
-# Asegúrate de que `target/mi-aplicacion.jar` coincida con el nombre del archivo JAR generado por tu proyecto
-COPY target/apirest.jar app.jar
 
-# Expone el puerto que usa tu aplicación (por defecto, Spring Boot usa el puerto 8080)
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+# Expone el puerto 9000
 EXPOSE 9000
 
-# Define el comando para ejecutar la aplicación
+# Ejecuta la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
